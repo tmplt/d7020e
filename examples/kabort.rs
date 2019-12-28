@@ -11,7 +11,6 @@ use panic_halt as _;
 #[no_mangle]
 fn main() {
     let mut a = 0;
-    // ksymbol!(&mut a, "a");
     panic!();
 }
 
@@ -20,10 +19,10 @@ fn main() {
 fn main() {
     let mut a = 0;
     klee_make_symbolic(&mut a, "a");
-    // match a {
-    //     0 => klee_abort(),
-    //     2 => klee_abort(),
-    //     _ => (),
-    // };
+    match a {
+        0 => klee_abort(),
+        2 => klee_abort(),
+        _ => (),
+    };
     panic();
 }
