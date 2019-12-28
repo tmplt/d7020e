@@ -1,0 +1,23 @@
+[package]
+name = "klee-examples"
+version = "0.1.0"
+authors = ["pln <Per Lindgren>"]
+edition = "2018"
+
+[dependencies]
+panic-halt = "0.2.0"
+
+[dependencies.klee-sys]
+path = "../klee-sys"
+
+[features] 
+klee-analysis = ["klee-sys/klee-analysis"]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+debug = true
+panic = "abort"
+incremental = false
+lto = true
