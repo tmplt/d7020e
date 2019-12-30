@@ -31,18 +31,18 @@ path = "../cortex-m-rtpro"
 optional = true
 
 [dependencies.cortex-m]
-version = "0.6.0"
+version = "0.6.1"
 optional = true
 # #features = ["inline-asm", "klee-analysis"]
 
 [patch.crates-io]
 vcell = { git = "https://github.com/perlindgren/vcell.git", branch = "trustit" }
 # volatile-register = { git = "https://github.com/perlindgren/volatile-register.git" }
-# cortex-m = { git = "https://github.com/perlindgren/cortex-m.git", branch = "klee-analysis" }
+cortex-m = { git = "https://github.com/perlindgren/cortex-m.git", branch = "trustit" }
 
 
 [features] 
-klee-analysis = ["vcell/klee-analysis"]
+klee-analysis = [ "vcell/klee-analysis", "cortex-m/klee-analysis" ]
 
 [profile.dev]
 panic = "abort"
