@@ -7,7 +7,7 @@
 // will still be treated as a new symbol. That might be overly pessimistic
 // but is a safe approximation for the worst case behavior of the hardware.
 //
-// > cargo klee --bin register --release
+// > cargo klee --example register_test --release
 // ...
 // KLEE: ERROR: /home/pln/.cargo/registry/src/github.com-1ecc6299db9ec823/panic-abort-0.3.2/src/lib.rs:49: abort failure
 // KLEE: NOTE: now ignoring this error at this location
@@ -16,17 +16,17 @@
 // KLEE: done: completed paths = 3
 // KLEE: done: generated tests = 3
 //
-// > ls target/release/deps/klee-last/
+// > ls target/release/examples/klee-last/
 // assembly.ll  info  messages.txt  run.istats  run.stats  test000001.ktest  test000002.ktest  test000003.abort.err  test000003.kquery  test000003.ktest  warnings.txt
 //
-// We see that KLEE spoted the test3 hits unreachable (and thus panics)
+// We see that KLEE spotted the test3 hits unreachable (and thus panics)
 //
 // Let's look at the test cases separately:
 //
 // test1 passed:
-// ktest-tool target/release/deps/klee-last/test000001.ktest
-// ktest file : 'target/release/deps/klee-last/test000001.ktest'
-// args       : ['/home/pln/rust/cargo-klee/klee-examples/target/release/deps/register-16afa0ec4812d3e4.ll']
+// ktest-tool target/release/examples/klee-last/test000001.ktest
+// ktest file : 'target/release/examples/klee-last/test000001.ktest'
+// args       : ['...']
 // num objects: 1
 // object 0: name: 'vcell'
 // object 0: size: 4
@@ -38,9 +38,9 @@
 // If the first read of the register is not 1 then we are ok.
 //
 // The second test also passed.
-// ktest-tool target/release/deps/klee-last/test000002.ktest
-// ktest file : 'target/release/deps/klee-last/test000002.ktest'
-// args       : ['/home/pln/rust/cargo-klee/klee-examples/target/release/deps/register-16afa0ec4812d3e4.ll']
+// ktest-tool target/release/examples/klee-last/test000002.ktest
+// ktest file : 'target/release/examples/klee-last/test000002.ktest'
+// args       : ['...']
 // num objects: 2
 // object 0: name: 'vcell'
 // object 0: size: 4
@@ -60,9 +60,9 @@
 // returning 2.
 //
 // The third test gives the error.
-// ktest-tool target/release/deps/klee-last/test000003.ktest
-// ktest file : 'target/release/deps/klee-last/test000003.ktest'
-// args       : ['/home/pln/rust/cargo-klee/klee-examples/target/release/deps/register-16afa0ec4812d3e4.ll']
+// ktest-tool target/release/examples/klee-last/test000003.ktest
+// ktest file : 'target/release/examples/klee-last/test000003.ktest'
+// args       : ['...']
 // num objects: 2
 // object 0: name: 'vcell'
 // object 0: size: 4
@@ -85,7 +85,6 @@
 #![no_main]
 
 use panic_klee as _;
-
 use volatile_register::RW;
 
 #[no_mangle]
@@ -99,6 +98,7 @@ fn main() {
         unsafe { rw.write(0) };
         // this read is still treated as a new symbolic value of type u32
         if rw.read() == 2 {
+            // will generate a panic!() if reached.
             unreachable!();
         }
     }
