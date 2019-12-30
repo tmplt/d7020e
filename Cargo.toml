@@ -6,12 +6,33 @@ edition = "2018"
 
 [dependencies]
 panic-halt = "0.2.0"
+cortex-m-semihosting = "0.3.5"
+lm3s6965 = "0.1.3"
+vcell = "0.1.2"
+
+[dependencies.panic-klee]
+git = "https://gitlab.henriktjader.com/pln/panic-klee.git"
+version = "0.1.0"
 
 [dependencies.klee-sys]
-path = "../klee-sys"
+git = "https://gitlab.henriktjader.com/pln/klee-sys.git"
+version = "0.1.0"
+
+[dependencies.cortex-m-rtfm]
+path = "../cortex-m-rtpro"
+
+[dependencies.cortex-m]
+version = "0.6.0"
+# #features = ["inline-asm", "klee-analysis"]
+
+[patch.crates-io]
+vcell = { git = "https://github.com/perlindgren/vcell.git", branch = "trustit" }
+# volatile-register = { git = "https://github.com/perlindgren/volatile-register.git" }
+# cortex-m = { git = "https://github.com/perlindgren/cortex-m.git", branch = "klee-analysis" }
+
 
 [features] 
-klee-analysis = ["klee-sys/klee-analysis"]
+klee-analysis = ["klee-sys/klee-analysis", "vcell/klee-analysis", "cortex-m-rtfm/klee-analysis"]
 
 [profile.dev]
 panic = "abort"

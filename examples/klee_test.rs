@@ -2,7 +2,7 @@
 #![no_main]
 
 #[cfg(feature = "klee-analysis")]
-use klee_sys::{klee_abort, klee_assert, klee_assert_eq, klee_make_symbolic};
+use panic_klee as _;
 
 #[cfg(not(feature = "klee-analysis"))]
 use panic_halt as _;
@@ -14,6 +14,8 @@ fn main() {
     panic!();
 }
 
+#[cfg(feature = "klee-analysis")]
+use klee_sys::{klee_abort, klee_assert, klee_assert_eq, klee_make_symbolic};
 #[cfg(feature = "klee-analysis")]
 #[no_mangle]
 fn main() {
