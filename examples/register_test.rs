@@ -80,6 +80,36 @@
 // object 1: text: ....
 //
 // The first read gives 1, the second 2, and we hit unreacable.
+//
+// Showcase how individual fields can be made symbolic
+// $ cargo klee --example register_test -r -k -g -v
+// ...
+// Reading symbols from register.replay...done.
+//
+// (gdb) set env KTEST_FILE=klee-last/test000001.ktest
+// (gdb) run # for the generated test the program will run to end
+// Starting program: /home/pln/rust/grepit/klee-examples/target/debug/examples/register_test.replay
+// [Inferior 1 (process 25074) exited with code ...]
+//
+// (gdb) set env KTEST_FILE=klee-last/test000003.ktest
+// (gdb) run # for the generated test the program will panic due to unreachable.
+// // Starting program: /home/pln/rust/grepit/klee-examples/target/debug/examples/register_test.replay
+// Program received signal SIGABRT, Aborted.
+// 0x00007ffff7dd3f25 in raise () from /usr/lib/libc.so.6
+// (gdb) backtrace
+// #0  0x00007ffff7dd3f25 in raise () from /usr/lib/libc.so.6
+// #1  0x00007ffff7dbd897 in abort () from /usr/lib/libc.so.6
+// #2  0x00005555555553db in rust_begin_unwind (_info=0x7fffffffd268) at /home/pln/.cargo/git/checkouts/panic-klee-aa8d015442188497/3b0c897/src/lib.rs:8
+// #3  0x000055555555533d in core::panicking::panic_fmt () at src/libcore/panicking.rs:139
+// #4  0x00005555555553a9 in core::panicking::panic () at src/libcore/panicking.rs:70
+// #5  0x0000555555555303 in main () at examples/register_test.rs:104
+// (gdb) frame 5
+// #5  0x0000555555555303 in main () at examples/register_test.rs:104
+// 104                 unreachable!();
+// (gdb) print read_1
+// $1 = 1
+// (gdb) print read_2
+// $2 = 2
 
 #![no_std]
 #![no_main]
@@ -93,11 +123,13 @@ fn main() {
     let rw: RW<u32> = unsafe { core::mem::MaybeUninit::uninit().assume_init() };
 
     // reading will render a symbolic value of type u32
-    if rw.read() == 1 {
+    let read_1 = rw.read();
+    if read_1 == 1 {
         // we emulate a write to the hardware register
         unsafe { rw.write(0) };
         // this read is still treated as a new symbolic value of type u32
-        if rw.read() == 2 {
+        let read_2 = rw.read();
+        if read_2 == 2 {
             // will generate a panic!() if reached.
             unreachable!();
         }
