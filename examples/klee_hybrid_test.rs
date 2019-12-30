@@ -1,3 +1,6 @@
+// example to show conditional compilation of hybrid applications
+// compiling both for klee analysis and just as bare metal
+//
 #![no_std]
 #![no_main]
 
