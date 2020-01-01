@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use klee_sys::{klee_abort, klee_assert, klee_assert_eq, klee_make_symbolic};
+use klee_sys::klee_abort;
 use panic_klee as _;
 use vcell;
 
