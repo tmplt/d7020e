@@ -37,22 +37,37 @@ optional = true
 # #features = ["inline-asm", "klee-analysis"]
 
 [patch.crates-io]
-vcell = { git = "https://github.com/perlindgren/vcell.git", branch = "trustit" }
-cortex-m = { git = "https://github.com/perlindgren/cortex-m.git", branch = "trustit" }
+#vcell = { git = "https://github.com/perlindgren/vcell.git", branch = "trustit" }
+vcell = { path = "../vcell" }
+
+#volatile-register = { git = "https://github.com/perlindgren/volatile-register.git", branch = "trustit" }
+#volatile-register = { path = "../volatile-register" }
+
+#cortex-m = { git = "https://github.com/perlindgren/cortex-m.git", branch = "trustit" }
+cortex-m = { path = "../cortex-m" }
+
 #cortex-m-rt = { git = "https://github.com/perlindgren/cortex-m-rt.git", branch = "trustit" }
 cortex-m-rt = { path = "../cortex-m-rt" }
 
 [features] 
-klee-analysis = [ "vcell/klee-analysis", "cortex-m/klee-analysis", "cortex-m-rt/klee-analysis" ]
+klee-analysis = [ 
+    "vcell/klee-analysis",
+#    "volatile-register/klee-analysis", 
+    "cortex-m/klee-analysis", 
+    "cortex-m-rt/klee-analysis" 
+    ]
+inline-asm = ["cortex-m/inline-asm"]
 rtpro = [ "cortex-m-rtfm/klee-analysis", "lm3s6965" ]
 
 [profile.dev]
 panic = "abort"
-incremental = false
+# incremental = false
 lto = true
+# codegen-units = 1
 
 [profile.release]
 debug = true
 panic = "abort"
 incremental = false
 lto = true
+codegen-units = 1

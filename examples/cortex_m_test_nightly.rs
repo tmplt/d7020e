@@ -1,19 +1,3 @@
-// > cargo klee --example klee_cortex_m_test -r -k -g -v --release
-// ...
-// KLEE: done: total instructions = 33
-// KLEE: done: completed paths = 1
-// KLEE: done: generated tests = 1
-//
-// The example, has just one path, leading up to an abort.
-// The reason is that the progam unconditionally will panic, as
-// taking the peripheral is only only allowed once (for soundness).
-// (Internally this in tracked by a state variable.)
-//
-// This is very good news, that KLEE will detect the error at compile time.
-//
-// Let's remove the error to see if the example code is correct.
-// (comment out the second `take`)
-//
 // > cargo klee --example klee_cortex_m_test -r -k -g -v
 // ...
 // KLEE: ERROR: examples/klee_cortex_m_test.rs:120: divide by zero
@@ -108,11 +92,11 @@
 // Notice here, that this error is spotted EVEN while we are telling
 // Rust to use the primitive (intrinsic) division for "unchecked_div" performance.
 //
-#![feature(core_intrinsics)] // we use intrinsic division
+#![feature(core_intrinsics)] // intrinsic division requires nightly
 #![no_std]
 #![no_main]
 
-// extern crate klee_sys;
+use klee_sys::klee_abort;
 extern crate cortex_m;
 extern crate panic_klee;
 
@@ -133,4 +117,5 @@ fn main() {
         let some_time_quota = unchecked_div(a, c - (b - 100));
         read_volatile(&some_time_quota); // prevent optimization
     }
+    klee_abort!();
 }
