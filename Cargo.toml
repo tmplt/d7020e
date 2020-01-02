@@ -37,14 +37,14 @@ optional = true
 # #features = ["inline-asm", "klee-analysis"]
 
 [patch.crates-io]
-#vcell = { git = "https://github.com/perlindgren/vcell.git", branch = "trustit" }
-vcell = { path = "../vcell" }
+vcell = { git = "https://github.com/perlindgren/vcell.git", branch = "trustit" }
+#vcell = { path = "../vcell" }
 
 #volatile-register = { git = "https://github.com/perlindgren/volatile-register.git", branch = "trustit" }
 #volatile-register = { path = "../volatile-register" }
 
-#cortex-m = { git = "https://github.com/perlindgren/cortex-m.git", branch = "trustit" }
-cortex-m = { path = "../cortex-m" }
+cortex-m = { git = "https://github.com/perlindgren/cortex-m.git", branch = "trustit" }
+#cortex-m = { path = "../cortex-m" }
 
 #cortex-m-rt = { git = "https://github.com/perlindgren/cortex-m-rt.git", branch = "trustit" }
 cortex-m-rt = { path = "../cortex-m-rt" }
