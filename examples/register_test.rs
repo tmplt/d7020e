@@ -1,3 +1,33 @@
+#![no_std]
+#![no_main]
+
+use core::ptr::read_volatile;
+use panic_klee as _;
+use volatile_register::RW;
+#[no_mangle]
+fn main() {
+    // we emulate a read/write hardware register (rw)
+    let rw: RW<u32> = unsafe { core::mem::MaybeUninit::uninit().assume_init() };
+
+    // reading will render a symbolic value of type u32
+    let read_1 = rw.read();
+    if read_1 == 1 {
+        // we emulate a write to the hardware register
+        unsafe { rw.write(0) };
+        // this read is still treated as a new symbolic value of type u32
+        let read_2 = rw.read();
+        if read_2 == 2 {
+            // will generate a panic!() if reached.
+            // unsafe {
+            //     // to avoid optimization
+            //     let _ = read_volatile(&read_1);
+            //     let _ = read_volatile(&read_2);
+            // }
+            unreachable!();
+        }
+    }
+}
+
 // showcase volatile register
 // This is the underlying abstraction to all register accesses using the
 // embedded Rust ecosystem.
@@ -19,12 +49,12 @@
 // > ls target/release/examples/klee-last/
 // assembly.ll  info  messages.txt  run.istats  run.stats  test000001.ktest  test000002.ktest  test000003.abort.err  test000003.kquery  test000003.ktest  warnings.txt
 //
-// We see that KLEE spotted the test3 hits unreachable (and thus panics)
+// We see that KLEE spotted the test000003 hits unreachable (and thus panics)
 //
 // Let's look at the test cases separately:
 //
 // test1 passed:
-// ktest-tool target/release/examples/klee-last/test000001.ktest
+// > ktest-tool target/release/examples/klee-last/test000001.ktest
 // ktest file : 'target/release/examples/klee-last/test000001.ktest'
 // args       : ['...']
 // num objects: 1
@@ -35,7 +65,8 @@
 // object 0: int : 0
 // object 0: uint: 0
 // object 0: text: ....
-// If the first read of the register is not 1 then we are ok.
+//
+// If the first read of the register is not 1 then we are ok (program ends).
 //
 // The second test also passed.
 // ktest-tool target/release/examples/klee-last/test000002.ktest
@@ -110,28 +141,6 @@
 // $1 = 1
 // (gdb) print read_2
 // $2 = 2
-
-#![no_std]
-#![no_main]
-
-use panic_klee as _;
-use volatile_register::RW;
-
-#[no_mangle]
-fn main() {
-    // we emulate a read/write hardware register (rw)
-    let rw: RW<u32> = unsafe { core::mem::MaybeUninit::uninit().assume_init() };
-
-    // reading will render a symbolic value of type u32
-    let read_1 = rw.read();
-    if read_1 == 1 {
-        // we emulate a write to the hardware register
-        unsafe { rw.write(0) };
-        // this read is still treated as a new symbolic value of type u32
-        let read_2 = rw.read();
-        if read_2 == 2 {
-            // will generate a panic!() if reached.
-            unreachable!();
-        }
-    }
-}
+//
+// If this does not work its a gdb problem
+// try lldb the LLVM debugger (debug info may not be completely compatible)
