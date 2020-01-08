@@ -1,31 +1,57 @@
-// > cargo klee --example klee_cortex_m_test -r -k -g -v
+#![feature(core_intrinsics)] // intrinsic division requires nightly
+#![no_std]
+#![no_main]
+
+use klee_sys::klee_abort;
+extern crate cortex_m;
+extern crate panic_klee;
+
+use cortex_m::peripheral::Peripherals;
+
+use core::{intrinsics::unchecked_div, num::Wrapping, ptr::read_volatile};
+
+#[no_mangle]
+fn main() {
+    let peripherals = Peripherals::take().unwrap();
+    // let peripherals = Peripherals::take().unwrap();
+    let mut dwt = peripherals.DWT;
+    dwt.enable_cycle_counter();
+    let a = dwt.cyccnt.read();
+    let b = dwt.cyccnt.read();
+    let c = dwt.cyccnt.read();
+    unsafe {
+        let some_time_quota = unchecked_div(a, (Wrapping(c) - (Wrapping(b) - Wrapping(100))).0);
+        read_volatile(&some_time_quota); // prevent optimization in release mode
+    }
+}
+
+// > cargo klee --example cortex_m_test_nightly -r -k -g -v
 // ...
-// KLEE: ERROR: examples/klee_cortex_m_test.rs:120: divide by zero
-// KLEE: NOTE: now ignoring this error at this location
-// KLEE: ERROR: /home/pln/.cargo/git/checkouts/panic-klee-aa8d015442188497/3b0c897/src/lib.rs:8: abort failure
+// KLEE: WARNING: undefined reference to function: rust_eh_personality
+// KLEE: ERROR: examples/cortex_m_test_nightly.rs:23: divide by zero
 // KLEE: NOTE: now ignoring this error at this location
 //
-// KLEE: done: total instructions = 1454
-// KLEE: done: completed paths = 6
-// KLEE: done: generated tests = 4
+// KLEE: done: total instructions = 1446
+// KLEE: done: completed paths = 4
+// KLEE: done: generated tests = 3
 // ..
 //(gdb) shell ls klee-last
-// assembly.ll  info  messages.txt  run.istats  run.stats  test000001.div.err  test000001.kquery  test000001.ktest  test000002.ktest  warnings.txt
+// assembly.ll  info  messages.txt  run.istats  run.stats  test000001.div.err  test000001.kquery  test000001.ktest  test000002.ktest  test000003.ktest  warnings.txt
 //
 // So we see that test000001.ktest was causing a division error,
 // the other test case passed
 //
 // (gdb) set env KTEST_FILE=klee-last/test000001.ktest
 // (gdb) run
-// Starting program: /home/pln/rust/grepit/klee-examples/target/debug/examples/klee_cortex_m_test.replay
+// Starting program: /home/pln/rust/trustit/klee-examples/target/debug/examples/cortex_m_test_nightly.replay
 // Program received signal SIGFPE, Arithmetic exception.
-// 0x0000555555555528 in main () at examples/klee_cortex_m_test.rs:133
-// 133             let some_time_quota = unchecked_div(a, c - (b - 100));
+// 0x0000555555555525 in main () at examples/cortex_m_test_nightly.rs:23
+// 23              let some_time_quota = unchecked_div(a, (Wrapping(c) - (Wrapping(b) - Wrapping(100))).0);
 //
 // Let's look at the actual test
 // (gdb) shell ktest-tool klee-last/test000001.ktest
 // ktest file : 'klee-last/test000001.ktest'
-// args       : ['/home/pln/rust/grepit/klee-examples/target/debug/examples/klee_cortex_m_test-d9038188a1e4d0b0.ll']
+// args       : ['/home/pln/rust/trustit/klee-examples/target/debug/examples/cortex_m_test_nightly-dd58a25289c18430.ll']
 // num objects: 5
 // object 0: name: 'PRIMASK'
 // object 0: size: 4
@@ -63,8 +89,8 @@
 // object 4: uint: 0
 // object 4: text: ....
 //
-// (gdb) backtrace
-// #0  0x0000555555555528 in main () at examples/klee_cortex_m_test.rs:133
+// (gdb)  backtrace
+// #0  0x0000555555555525 in main () at examples/cortex_m_test_nightly.rs:23
 // (gdb) print a
 // $1 = 0
 // (gdb) print b
@@ -82,7 +108,7 @@
 // (Under the hood, `Peripherals.take` executes in a global critical section.)
 //
 // This access is along the "happy path" towards the error, so any value would
-// suffice (in this case 0x00000000 was selected by KLEE).
+// suffice (in this case 0x01010101 was selected by KLEE).
 //
 // The first `vcell` access: was done when enabling the cycle counter.
 // The rest of accesses stem from reading `a`, `b`, and `c`.
@@ -92,30 +118,20 @@
 // Notice here, that this error is spotted EVEN while we are telling
 // Rust to use the primitive (intrinsic) division for "unchecked_div" performance.
 //
-#![feature(core_intrinsics)] // intrinsic division requires nightly
-#![no_std]
-#![no_main]
-
-use klee_sys::klee_abort;
-extern crate cortex_m;
-extern crate panic_klee;
-
-use cortex_m::peripheral::Peripherals;
-
-use core::{intrinsics::unchecked_div, ptr::read_volatile};
-
-#[no_mangle]
-fn main() {
-    let peripherals = Peripherals::take().unwrap();
-    // let peripherals = Peripherals::take().unwrap();
-    let mut dwt = peripherals.DWT;
-    dwt.enable_cycle_counter();
-    let a = dwt.cyccnt.read();
-    let b = dwt.cyccnt.read();
-    let c = dwt.cyccnt.read();
-    unsafe {
-        let some_time_quota = unchecked_div(a, c - (b - 100));
-        read_volatile(&some_time_quota); // prevent optimization
-    }
-    klee_abort!();
-}
+// Now re-run the example in --release mode.
+// You should find that the error is spotted but the variables are in registers,
+// so `print` won't work.
+//
+// Discussion:
+// We can allow for AGGRESSIVE optimization by proving the absence of errors.
+// In this case we use the Wrapping for unchecked wrapping arithmetics (along the lines of C/C++)
+// and primitive unchecked (intrinsic) division.
+//
+// Checked arithmetics comes with a high prise at run-time, and for embedded not
+// only affects the execution time but also power consumption.
+//
+// We can fearlessly apply optimisations (including intrinsic/primitive operations)
+// and let the tool prove that the code is free of potential errors.
+//
+// Thus we get BOTH improved performance and improved reliability/correctness at the same time.
+// This is the Way!

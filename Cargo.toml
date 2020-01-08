@@ -9,10 +9,18 @@ panic-halt = "0.2.0"
 
 vcell = "0.1.2"
 volatile-register = "0.2.0"
-cortex-m-rt = "0.6.11"
+
+[dependencies.cortex-m-rt]
+version = "0.6.11"
+optional = true
 
 [dependencies.lm3s6965] 
 version = "0.1.3"
+optional = true
+
+[dependencies.stm32f4] 
+version = "0.9.0"
+features = ["stm32f401", "rt"]
 optional = true
 
 [dependencies.cortex-m-semihosting]
@@ -27,39 +35,40 @@ version = "0.1.0"
 git = "https://gitlab.henriktjader.com/pln/klee-sys.git"
 version = "0.1.0"
 
-[dependencies.cortex-m-rtfm]
-path = "../cortex-m-rtpro"
-optional = true
+# [dependencies.cortex-m-rtfm]
+# path = "../cortex-m-rtpro"
+# optional = true
 
 [dependencies.cortex-m]
 version = "0.6.1"
 optional = true
-# #features = ["inline-asm", "klee-analysis"]
 
 [patch.crates-io]
 vcell = { git = "https://github.com/perlindgren/vcell.git", branch = "trustit" }
 #vcell = { path = "../vcell" }
 
 cortex-m = { git = "https://github.com/perlindgren/cortex-m.git", branch = "trustit" }
-#cortex-m = { path = "../cortex-m" }
+# cortex-m = { path = "../cortex-m" }
 
-#cortex-m-rt = { git = "https://github.com/perlindgren/cortex-m-rt.git", branch = "trustit" }
-cortex-m-rt = { path = "../cortex-m-rt" }
+cortex-m-rt = { git = "https://github.com/perlindgren/cortex-m-rt.git", branch = "trustit" }
+# cortex-m-rt = { path = "../cortex-m-rt" }
 
 [features] 
 klee-analysis = [ 
-    "vcell/klee-analysis",
-    "cortex-m/klee-analysis", 
-    "cortex-m-rt/klee-analysis" 
-    ]
+     "vcell/klee-analysis",
+     "cortex-m/klee-analysis", 
+     "cortex-m-rt/klee-analysis" 
+]
+
 inline-asm = ["cortex-m/inline-asm"]
-rtpro = [ "cortex-m-rtfm/klee-analysis", "cortex-m-rt/rtpro", "lm3s6965" ]
+# rtpro = [ "cortex-m-rtfm/klee-analysis", "cortex-m-rt/rtpro", "lm3s6965" ]
+f4 = ["stm32f4/stm32f401", "stm32f4/rt", "cortex-m-semihosting", "cortex-m-rt"]
 
 [profile.dev]
 panic = "abort"
-# incremental = false
+# incremental = false # used to be required due to bug in rust toolchain
 lto = true
-# codegen-units = 1
+# codegen-units = 1 # used to be required due to bug in rust toolchain
 
 [profile.release]
 debug = true
