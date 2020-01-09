@@ -106,3 +106,4 @@ fn main() {
 //
 // This example is of course contrieved, but showcase that "classical" measures/
 // quality goals restated and certification procedures updated accordingly!
+// This is the way!

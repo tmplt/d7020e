@@ -14,3 +14,9 @@ fn main() {
         _ => (),
     };
 }
+
+// cargo klee --example vcell_test
+//
+// We get three paths, as the vc is made symbolic.
+//
+// This is the way!

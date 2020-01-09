@@ -134,4 +134,4 @@ fn main() {
 // and let the tool prove that the code is free of potential errors.
 //
 // Thus we get BOTH improved performance and improved reliability/correctness at the same time.
-// This is the Way!
+// This is the way!

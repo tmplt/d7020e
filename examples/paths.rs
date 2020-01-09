@@ -110,4 +110,4 @@ fn main() {
 //
 // In this case we see that the panic was triggered by the division by zero.
 //
-//
+// This is the way!

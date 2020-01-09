@@ -66,13 +66,13 @@ f4 = ["stm32f4/stm32f401", "stm32f4/rt", "cortex-m-semihosting", "cortex-m-rt"]
 
 [profile.dev]
 panic = "abort"
-# incremental = false # used to be required due to bug in rust toolchain
+incremental = false # needed due to bug in rust toolchain
 lto = true
 # codegen-units = 1 # used to be required due to bug in rust toolchain
 
 [profile.release]
-debug = true
 panic = "abort"
-incremental = false
-lto = true
-codegen-units = 1
+debug = true        # better debugging
+incremental = false # better optimization
+lto = true          # better optimization
+codegen-units = 1   # better optimization

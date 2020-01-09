@@ -99,3 +99,8 @@ fn PendSV() {
 fn SysTick() {
     //klee_abort!();
 }
+
+// Test all bindings to the cortex core.
+// Todo: handle weak bindings
+// Todo: handle arbitrary interrupt bindings
+// This is the way!

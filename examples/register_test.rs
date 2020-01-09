@@ -144,3 +144,5 @@ fn main() {
 //
 // If this does not work its a gdb problem
 // try lldb the LLVM debugger (debug info may not be completely compatible)
+//
+// This is the way!

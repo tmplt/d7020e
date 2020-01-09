@@ -29,3 +29,4 @@ fn main() -> ! {
 // openocd -f openocd.cfg
 //
 // cargo run --example f401_minimal --features f4 --target thumbv7em-none-eabihf
+// This is the way!

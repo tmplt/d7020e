@@ -26,3 +26,5 @@ unsafe fn main() -> ! {
 
 #[pre_init]
 unsafe fn pre_init() {}
+
+// This is the way!
