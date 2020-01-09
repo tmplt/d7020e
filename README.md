@@ -10,10 +10,17 @@ This example showcase the different path termintaiton conditions possible and th
 
 This example showcase contract based verification, and the possibilies to extract proofs.
 
+## struct.rs
+
+This example show the case of partially symbolic structures.
+
 ## vcell_test.rs
 
-Simple test to showcase low-level access.
+Simple test to showcase low-level `vcell` access.
 
+## register_test.rs
+
+Simple test to showcase the use of the `volatile-register` abstraction.
 
 ## f401_minimal.rs
 
