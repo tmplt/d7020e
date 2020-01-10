@@ -1,7 +1,6 @@
 #![no_std]
 #![no_main]
 
-use core::ptr::read_volatile;
 use panic_klee as _;
 use volatile_register::RW;
 #[no_mangle]
@@ -18,11 +17,6 @@ fn main() {
         let read_2 = rw.read();
         if read_2 == 2 {
             // will generate a panic!() if reached.
-            // unsafe {
-            //     // to avoid optimization
-            //     let _ = read_volatile(&read_1);
-            //     let _ = read_volatile(&read_2);
-            // }
             unreachable!();
         }
     }
@@ -112,19 +106,19 @@ fn main() {
 //
 // The first read gives 1, the second 2, and we hit unreacable.
 //
-// Showcase how individual fields can be made symbolic
+// We can replay the last test to gather more information:
 // $ cargo klee --example register_test -r -k -g -v
 // ...
 // Reading symbols from register.replay...done.
 //
 // (gdb) set env KTEST_FILE=klee-last/test000001.ktest
 // (gdb) run # for the generated test the program will run to end
-// Starting program: /home/pln/rust/grepit/klee-examples/target/debug/examples/register_test.replay
+// Starting program: /home/pln/rust/trustit/klee-examples/target/debug/examples/register_test.replay
 // [Inferior 1 (process 25074) exited with code ...]
 //
 // (gdb) set env KTEST_FILE=klee-last/test000003.ktest
 // (gdb) run # for the generated test the program will panic due to unreachable.
-// // Starting program: /home/pln/rust/grepit/klee-examples/target/debug/examples/register_test.replay
+// // Starting program: /home/pln/rust/trustit/klee-examples/target/debug/examples/register_test.replay
 // Program received signal SIGABRT, Aborted.
 // 0x00007ffff7dd3f25 in raise () from /usr/lib/libc.so.6
 // (gdb) backtrace
@@ -142,7 +136,7 @@ fn main() {
 // (gdb) print read_2
 // $2 = 2
 //
-// If this does not work its a gdb problem
-// try lldb the LLVM debugger (debug info may not be completely compatible)
+// If this does not work its a gdb problem, try lldb the LLVM debugger
+// (debug info may not be completely compatible)
 //
 // This is the way!
