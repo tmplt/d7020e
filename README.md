@@ -40,7 +40,12 @@ See section `Cargo.toml` for detaled information on features introduced.
 
 - `register_test.rs`
 
-    Simple test to showcase the use of the `volatile-register` abstraction. `volitile-register` builds on `vcell` and is used by both hand written and machine generated hardware accesses in the Rust embedded ecosystem. 
+    Simple test to showcase the use of the `volatile-register` abstraction. `volitile-register` builds on `vcell` and is used by both hand written and machine generated hardware accesses in the Rust embedded ecosystem.
+
+    This example also showcase the `gdb` replay functionality.
+
+    TODO: perhaps better to put the `gdb` replay in the Basic test examples, 
+    as replay is not tied to `volatile-register`.
 
 - `cortex-m-test1.rs`
 
