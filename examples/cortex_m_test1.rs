@@ -45,7 +45,7 @@ fn main() {
 //
 // This is due to that the `dwt.read` has rendered `a` as a symbolic value.
 //
-// Now let's comment out line 18 and uncamment line 19.
+// Now let's comment out line 18 and un-comment line 19.
 //
 // > cargo klee --example cortex_m_test1
 // ...
@@ -76,7 +76,7 @@ fn main() {
 // So what we see here, is that the if statement is nowhere to be found
 // and we call @obort(), and the code below is unreachable (as abort() -> !)
 //
-// This is semantically equivallent to:
+// This is semantically equivalent to:
 // if a == unsafe { S } {
 //     // panic!();
 //     klee_abort!(); // (A)
@@ -104,6 +104,6 @@ fn main() {
 // Our test provides "complete" coverage regarding the semantics of the source code
 // (as we have not missed any potential error).
 //
-// This example is of course contrieved, but showcase that "classical" measures/
+// This example is of course contrived, but showcase that "classical" measures/
 // quality goals restated and certification procedures updated accordingly!
 // This is the way!

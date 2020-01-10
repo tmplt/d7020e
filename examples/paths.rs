@@ -11,7 +11,7 @@ fn main() {
     let mut a: i32 = 0;
     klee_make_symbolic!(&mut a, "a");
     // Rust panic on a == 200 (div by zero), or a - 200 (causing an arithmetic overflow).
-    let _ = 100 / (a - 200); // let _ = 100 / a.wrapping_sub(200);
+    let _ = 100 / a.wrapping_sub(200);
 
     let _ = match a {
         0 => klee_abort!(),
@@ -23,7 +23,7 @@ fn main() {
         6 => klee_assert_eq!(false, true),
         _ => (),
     };
-    panic!("at end"); // just one instane of panic! will be spotted
+    panic!("at end"); // just one instance of panic! will be spotted
 }
 
 // KLEE will generate one test per explicit error:

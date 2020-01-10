@@ -1,38 +1,81 @@
 # klee-examples
 
-This repo contains a set of usage examples for `klee-sys` low-level KLEE bindings.
+This repo contains a set of usage examples for `klee-sys` low-level KLEE bindings. For more information on internal design behind see the [klee-sys](https://gitlab.henriktjader.com/pln/klee-sys) repo.
 
-## paths.rs
+See section `Cargo.toml` for detaled information on features introduced.
 
-This example showcase the different path termintaiton conditions possible and their effect to KLEE test case generation.
+### General dependencies
 
-## assume_assert.rs
+- llvm toolchain tested with (9.0.1)
+- rustup tested with 1.40.0 (73528e339 2019-12-16)
+- klee tested with KLEE 2.1-pre (https://klee.github.io)
 
-This example showcase contract based verification, and the possibilies to extract proofs.
+- cargo-klee (installed from git)
 
-## struct.rs
+---
 
-This example show the case of partially symbolic structures.
+## Basic test examples
 
-## vcell_test.rs
+- `paths.rs`
 
-Simple test to showcase low-level `vcell` access.
+    This example showcase the different path termintaiton conditions possible and their effect to KLEE test case generation.
 
-## register_test.rs
+- `assume_assert.rs`
 
-Simple test to showcase the use of the `volatile-register` abstraction.
+    This example showcase contract based verification, and the possibilies to extract proofs.
 
-## f401_minimal.rs
+- `struct.rs`
+
+    This example show the case of partially symbolic structures.
+
+---
+
+## Hardware oriented test examples
+
+- `vcell_test.rs`
+
+    Simple test to showcase low-level [vcell](https://github.com/perlindgren/vcell) access. `vcell` underlies all machine generated hardware accesses in the Rust embedded ecosystem.
+
+    The `klee-analysis` feature replaces `read` operations to memory by symbolic values (using `klee-sys`). `write` operations are suppressed as for analysis we are not interested in the side effects.
+
+- `register_test.rs`
+
+    Simple test to showcase the use of the `volatile-register` abstraction. `volitile-register` builds on `vcell` and is used by both hand written and machine generated hardware accesses in the Rust embedded ecosystem. 
+
+- `cortex-m-test1.rs`
+
+   Simple test to showcase the [cortex-m](https://github.com/perlindgren/vcell) abstraction of ARM-core peripherals ARM thumb assembly instructions and ARM thumb CPU registers. `cortex-m` uses the `volatile-register` abstraction for ARM-core peripherals. The `klee-analysis` feature replaces read operations on CPU registers by symbolic data and suppresses write operations as for analysis we are not interested in the side effects.
+
+   Moreover the example showcase the discrepancies between Rust source code paths and paths in the generated (semantically equivalent) LLVM-IR.  
+
+   TODO: perhaps the latter part should be moved to Basic test examples as it is not `cortex-m` specific.
+
+- `cortex-m-test-nightly.rs`
+
+    This example showcase how compiler "intrinsics" can be safely adopted by proving the absence of errors.
+
+    TODO: perhaps this part should also be moved to Basic test examples as it is not `cortex-m` specific.
+
+---
+
+## Testing on hardware
+
+### Additional Dependencies:
+
+- `stm32401` Nucleo64 board or similar with recent `stlink` firmware (tested with latest firmware as of 2020-01-10).
+- `openocd` (tested with version 0.10.0)
+- `arm-none-eabi-gdb` (tested with version 0.8.3)
+- llvm target `thumbv7em-none-eabihf` 
+  - `> rustup show`, to show current Rust tool-chain and installed targets.
+  - `> rustup target add <target>`, to add target, e.g., `thumbv7em-none-eab¡hf`.
+  
+### Examples
+
+- `f401_minimal.rs`
 
 This example showcase the execution of code on the stm32f401 (and similar targets from the f4).
 
-### dependencies
-
-- stm32401 nucleo board or similiar with recent stlink firmware
-- (recent) openocd (tested with version 0.10.0)
-- arm-none-eabi-gdb (tested with version 0.8.3)
-- llvm target thumbv7em-none-eabi (`rustup target add thumbv7em-none-eabi`)
-
+--
 
 ## Licencse
 

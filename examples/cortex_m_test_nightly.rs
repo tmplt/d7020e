@@ -2,7 +2,7 @@
 #![no_std]
 #![no_main]
 
-use klee_sys::klee_abort;
+use klee_sys::*;
 extern crate cortex_m;
 extern crate panic_klee;
 
@@ -13,18 +13,25 @@ use core::{intrinsics::unchecked_div, num::Wrapping, ptr::read_volatile};
 #[no_mangle]
 fn main() {
     let peripherals = Peripherals::take().unwrap();
-    // let peripherals = Peripherals::take().unwrap();
+
     let mut dwt = peripherals.DWT;
     dwt.enable_cycle_counter();
     let a = dwt.cyccnt.read();
     let b = dwt.cyccnt.read();
     let c = dwt.cyccnt.read();
+    // let d = (Wrapping(c) - (Wrapping(b) - Wrapping(100))).0;
+    // klee_assume(d != 0);
     unsafe {
         let some_time_quota = unchecked_div(a, (Wrapping(c) - (Wrapping(b) - Wrapping(100))).0);
         read_volatile(&some_time_quota); // prevent optimization in release mode
     }
 }
 
+// Notice this example currently requires the nightly build of Rust.
+// > rustup override set nightly
+// When you are done with this example, you may return to stable Rust.
+// > rust override unset
+//
 // > cargo klee --example cortex_m_test_nightly -r -k -g -v
 // ...
 // KLEE: WARNING: undefined reference to function: rust_eh_personality
@@ -133,5 +140,13 @@ fn main() {
 // We can fearlessly apply optimisations (including intrinsic/primitive operations)
 // and let the tool prove that the code is free of potential errors.
 //
-// Thus we get BOTH improved performance and improved reliability/correctness at the same time.
+// Try uncommenting lines 22 and 23. This introduces a sufficient assumption
+// for KLEE to prove the absence of errors. (Beware that this guarantee
+// holds only for the exact source code given. If you change anything
+// the analysis needs to be re-done.)
+//
+// In conclusion, programs proven free of errors offer both
+// - improved performance (allow safe use of intrinsics), and
+// - improved reliability/correctness
+// at the same time.
 // This is the way!

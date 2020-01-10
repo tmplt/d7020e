@@ -23,7 +23,7 @@ fn f1(a: u32) -> u32 {
 
 // This example showcase how contracts can be encoded
 //
-// Let us start with the functian f1 (above).
+// Let us start with the function f1 (above).
 // Intuitively `f1(a) > a` right?
 //
 // Well let's check that....
@@ -59,23 +59,56 @@ fn f1(a: u32) -> u32 {
 //
 // > cargo klee --example assume_assert
 //
-// We can now finalize the contract, by uncommenting line 20 (with the post condition).
+// We can now finalize the contract, by un-commenting line 20 (with the post condition).
 //
 // So our pre-condition is that a < u32.MAX and the post condition is that r > a.
 //
 // Can assumptions go wrong?
 // Well they can? And we will spot it!
 //
-// Try uncommenting line 18, re-run `cargo klee`
+// Try un-commenting line 18, re-run `cargo klee`
 //
 // You should get...
 // KLEE: ERROR: /home/pln/.cargo/git/checkouts/klee-sys-7ee2aa8a1a6bbc46/c8275a3/src/lib.rs:19: invalid klee_assume call (provably false)
 //
 // So KLEE tracks the "path condition", i.e., at line 18 it knows (assumes) that that
-// a < u32::MAX, and finds that the assumtion a == u32::MAX cannot be satisfied.
+// a < u32::MAX, and finds that the assumption a == u32::MAX cannot be satisfied.
 //
-// This is exeteremely powerful as KLEE tracks all known "constraints" and all their raliaitons
+// This is extremely powerful as KLEE tracks all known "constraints" and all their raliaitons
 // and mathematically checks for the satisfiability of each "assume" and "assert".
-//
 // So what we get here is not a mere test, but an actual proof!!!!
 // This is the way!
+//
+// In the future we could provide some additional syntactic support for
+// contracts. It could look something like:
+//
+//#[contract: {
+// pre: a < u32::MAX,
+// post: f1(a) > a,
+// } ]
+//fn f1(a: u32) -> u32 {
+//     a + 1
+//}
+//
+// The corresponding generated code could look something like:
+// fn f1(a: u32) -> u32 {
+//     klee_assume(a < u32::MAX); // pre
+//     let r = f1_body(a);
+//     klee_assert!(r > a); // post
+//     r
+// }
+// #[inline(always)]
+// fn f1_body(a: u32) -> u32 {
+//     a + 1
+// }
+//
+// It might even be possible to derive post condtitions from pre conditions,
+// and report them to the user. Problem is that the conditions are
+// represented as "first order logic" (FOL) constraints, which need to be
+// converted into readable form (preferably Rust expressions.)
+//
+// Another potential extension is the extend contracts, assumptions and assertions
+// to support FOL natively, this would give us logic quantifiers:
+// `forall` and `exists`. Using FOL we can reason on programs in a more
+// general way, however the system will be significantly more difficult
+// to understand and use, so it remains to be seen/evaluated.
