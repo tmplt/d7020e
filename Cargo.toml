@@ -62,7 +62,7 @@ klee-analysis = [
 
 inline-asm = ["cortex-m/inline-asm"]
 # rtpro = [ "cortex-m-rtfm/klee-analysis", "cortex-m-rt/rtpro", "lm3s6965" ]
-f4 = ["stm32f4/stm32f401", "stm32f4/rt", "cortex-m-semihosting", "cortex-m-rt"]
+f4 = ["stm32f4/stm32f401", "stm32f4/rt", "cortex-m-semihosting", "cortex-m-rt", "cortex-m"]
 
 [profile.dev]
 panic = "abort"
