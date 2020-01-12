@@ -4,6 +4,7 @@ use ktest::{read_ktest, KTEST};
 use probe_rs::{
     config::registry::{Registry, SelectionStrategy},
     coresight::access_ports::AccessPortError,
+    coresight::memory::MI,
     flash::download::{
         download_file, download_file_with_progress_reporting, FileDownloadError, Format,
     },
@@ -12,6 +13,7 @@ use probe_rs::{
     target::info::{self, ChipInfo},
 };
 
+// le byte order
 fn main() {
     let mut probe = open_probe();
     println!("probe connected");
@@ -32,6 +34,8 @@ fn main() {
 
     let path_str = "../target/thumbv7em-none-eabihf/debug/examples/f401_break";
     // programming
+
+    print!("flashing...");
     download_file(
         &mut session,
         std::path::Path::new(&path_str.to_string().as_str()),
@@ -41,6 +45,8 @@ fn main() {
     .map_err(|e| format_err!("failed to flash {}: {}", path_str, e))
     .unwrap();
 
+    println!("... done");
+
     // session.probe.target_reset().unwrap();
     let cpu_info = session
         .target
@@ -49,22 +55,22 @@ fn main() {
         .unwrap();
     println!("Core stopped at address 0x{:08x}", cpu_info.pc);
 
-    let mut data = [0u8; 4];
+    let data = session.probe.read32(0x0000_0000).unwrap();
+    println!("stack 0x{:08x}", data);
+
+    let data = session.probe.read32(0x0000_0004).unwrap();
+    println!("reset 0x{:08x}", data);
+
     session
-        .target
-        .core
-        .read_block8(&mut session.probe, 0x0000_0000, &mut data)
+        .probe
+        .write_block32(0x2000_0000, &[0x0123_4567, 0x89ab_cdef])
         .unwrap();
 
-    println!("stack {:?}, 0x{:08x}", data, u32::from_le_bytes(data));
-    let mut data = [0u8; 4];
-    session
-        .target
-        .core
-        .read_block8(&mut session.probe, 0x0000_0004, &mut data)
-        .unwrap();
+    let mut r = [0u32; 2];
+    session.probe.read_block32(0x2000_0000, &mut r).unwrap();
 
-    println!("reset {:?}, 0x{:08x}", data, u32::from_le_bytes(data));
+    println!("0x2000_0000 = 0x{:08x}", r[0]);
+    println!("0x2000_0004 = 0x{:08x}", r[1]);
 
     let cpu_info = session.target.core.step(&mut session.probe).unwrap();
     println!("Core stopped at address 0x{:08x}", cpu_info.pc);
