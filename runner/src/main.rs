@@ -1,9 +1,12 @@
+use failure::format_err;
 use ktest::{read_ktest, KTEST};
 
 use probe_rs::{
     config::registry::{Registry, SelectionStrategy},
     coresight::access_ports::AccessPortError,
-    flash::download::FileDownloadError,
+    flash::download::{
+        download_file, download_file_with_progress_reporting, FileDownloadError, Format,
+    },
     probe::{stlink, DebugProbe, DebugProbeError, DebugProbeType, MasterProbe, WireProtocol},
     session::Session,
     target::info::{self, ChipInfo},
@@ -16,12 +19,27 @@ fn main() {
     let strategy = SelectionStrategy::ChipInfo(ChipInfo::read_from_rom_table(&mut probe).unwrap());
     println!("strategy {:?}", strategy);
 
+    let strategy = SelectionStrategy::TargetIdentifier("stm32f411".into());
+
     let registry = Registry::from_builtin_families();
 
     let target = registry.get_target(strategy).unwrap();
     println!("target {:?}", target);
 
     let mut session = Session::new(target, probe);
+
+    let mm = session.target.memory_map.clone();
+
+    let path_str = "../target/thumbv7em-none-eabihf/debug/examples/f401_break";
+    // programming
+    download_file(
+        &mut session,
+        std::path::Path::new(&path_str.to_string().as_str()),
+        Format::Elf,
+        &mm,
+    )
+    .map_err(|e| format_err!("failed to flash {}: {}", path_str, e))
+    .unwrap();
 
     // session.probe.target_reset().unwrap();
     let cpu_info = session

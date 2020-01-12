@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 probe-rs = { path = "../../probe-rs/probe-rs", version = "0.3.0" }
 ktest = { path = "../ktest", version = "0.1.0" }
+failure = "0.1.6"
