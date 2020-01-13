@@ -66,13 +66,11 @@ fn main() {
     println!("reset 0x{:08x}", data);
 
     run_to_halt(&mut session);
-
-    break_step(&mut session);
-
+    cycnt_enable(&mut session);
+    cycnt_reset(&mut session);
     run_to_halt(&mut session);
-
-    break_step(&mut session);
-
+    let cyccnt = cycnt_read(&mut session);
+    println!("cyccnt {}", cyccnt);
     run_to_halt(&mut session);
 
     // session
@@ -124,7 +122,7 @@ fn main() {
     // println!("breapoint reached");
 }
 
-fn read_pc(session: &mut Session) {
+fn read_bkpt(session: &mut Session) -> Option<u8> {
     // try to read the program counter
     let pc_value = session
         .target
@@ -135,13 +133,13 @@ fn read_pc(session: &mut Session) {
     let mut instr16 = [0u8; 2];
     session.probe.read_block8(pc_value, &mut instr16).unwrap();
 
-    println!(
-        "instr16 {:?}, {:b}, {:b}, {:x}",
-        instr16, instr16[0], instr16[1], instr16[1]
-    );
+    match instr16[1] {
+        0b10111110 => Some(instr16[0]),
+        _ => None,
+    }
 }
 
-fn break_step(session: &mut Session) {
+fn step_from_bkpt(session: &mut Session) {
     // try to read the program counter
     let pc_value = session
         .target
@@ -164,6 +162,12 @@ fn break_step(session: &mut Session) {
 
 fn run_to_halt(session: &mut Session) {
     // Continue running
+    if read_bkpt(session).is_some() {
+        println!("Continue from breakpoint.");
+        step_from_bkpt(session);
+    } else {
+        println!("Continue");
+    }
     session.target.core.run(&mut session.probe).unwrap();
     println!("running");
     session
@@ -174,7 +178,6 @@ fn run_to_halt(session: &mut Session) {
 
     let cpu_info = session.target.core.halt(&mut session.probe).unwrap();
     println!("Run: Core stopped at address 0x{:08x}", cpu_info.pc);
-    read_pc(session);
 }
 // index is the oject number
 fn set_symbolic(session: &mut Session, data: &[u8]) {
@@ -200,4 +203,24 @@ fn open_probe() -> MasterProbe {
     link.attach(Some(WireProtocol::Swd)).unwrap();
 
     MasterProbe::from_specific_probe(link)
+}
+
+const DWT_CTRL: u32 = 0xe000_1000;
+const DWT_CYCCNT: u32 = 0xe000_1004;
+
+fn cycnt_enable(session: &mut Session) {
+    session.probe.write32(DWT_CTRL, 0x1).unwrap();
+}
+
+fn cycnt_disable(session: &mut Session) {
+    session.probe.write32(DWT_CTRL, 0x0).unwrap();
+}
+
+fn cycnt_reset(session: &mut Session) {
+    // Reset cycle counter to 0
+    session.probe.write32(DWT_CYCCNT, 0x0).unwrap();
+}
+
+fn cycnt_read(session: &mut Session) -> u32 {
+    session.probe.read32(DWT_CYCCNT).unwrap()
 }
