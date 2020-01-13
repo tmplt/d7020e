@@ -13,6 +13,8 @@ use probe_rs::{
     target::info::{self, ChipInfo},
 };
 
+// don't look at this, its just testing some stuff...
+
 // le byte order
 fn main() {
     println!("read ktest file");
@@ -52,26 +54,25 @@ fn main() {
 
     // println!("... done");
 
-    let cpu_info = session
-        .target
-        .core
-        .reset_and_halt(&mut session.probe)
-        .unwrap();
-    println!("Core stopped at address 0x{:08x}", cpu_info.pc);
+    // let data = session.probe.read32(0x0000_0000).unwrap();
+    // println!("stack 0x{:08x}", data);
 
-    let data = session.probe.read32(0x0000_0000).unwrap();
-    println!("stack 0x{:08x}", data);
+    // let data = session.probe.read32(0x0000_0004).unwrap();
+    // println!("reset 0x{:08x}", data);
 
-    let data = session.probe.read32(0x0000_0004).unwrap();
-    println!("reset 0x{:08x}", data);
+    // run_to_halt(&mut session);
 
-    run_to_halt(&mut session);
-    cycnt_enable(&mut session);
-    cycnt_reset(&mut session);
-    run_to_halt(&mut session);
-    let cyccnt = cycnt_read(&mut session);
-    println!("cyccnt {}", cyccnt);
-    run_to_halt(&mut session);
+    // cycnt_enable(&mut session);
+    // cycnt_reset(&mut session);
+
+    // let cyccnt = cycnt_read(&mut session);
+    // println!("cyccnt {}", cyccnt);
+
+    // run_to_halt(&mut session);
+    // let cyccnt = cycnt_read(&mut session);
+    // println!("cyccnt {}", cyccnt);
+
+    // run_to_halt(&mut session);
 
     // session
     //     .target
@@ -94,23 +95,15 @@ fn main() {
     // let cpu_info = session.target.core.step(&mut session.probe).unwrap();
     // println!("Core stopped at address 0x{:08x}", cpu_info.pc);
 
-    // for (name, data) in ktest.objects {
-    //     println!("run {}", name);
-    //     session.target.core.run(&mut session.probe).unwrap();
+    reset_and_halt(&mut session);
+    run_to_halt(&mut session);
 
-    //     session
-    //         .target
-    //         .core
-    //         .wait_for_core_halted(&mut session.probe)
-    //         .unwrap();
+    for (name, data) in ktest.objects {
+        set_symbolic(&mut session, &data);
+        run_to_halt(&mut session);
+    }
 
-    //     let cpu_info = session.target.core.halt(&mut session.probe).unwrap();
-    //     println!("Core stopped at address 0x{:08x}", cpu_info.pc);
-
-    //     set_symbolic(&mut session, &data);
-    // }
-
-    // println!("done and run");
+    println!("done");
     // session.target.core.run(&mut session.probe).unwrap();
 
     // session
@@ -120,6 +113,20 @@ fn main() {
     //     .unwrap();
     // println!("Core stopped at address 0x{:08x}", cpu_info.pc);
     // println!("breapoint reached");
+}
+
+// resets the target and run
+fn reset_and_run(session: &mut Session) {
+    session.target.core.reset(&mut session.probe).unwrap();
+}
+
+// resets the target and halts
+fn reset_and_halt(session: &mut Session) {
+    session
+        .target
+        .core
+        .reset_and_halt(&mut session.probe)
+        .unwrap();
 }
 
 fn read_bkpt(session: &mut Session) -> Option<u8> {
@@ -170,14 +177,18 @@ fn run_to_halt(session: &mut Session) {
     }
     session.target.core.run(&mut session.probe).unwrap();
     println!("running");
-    session
-        .target
-        .core
-        .wait_for_core_halted(&mut session.probe)
-        .unwrap();
+    match session.target.core.wait_for_core_halted(&mut session.probe) {
+        Ok(_) => {
+            print!("Hit breakpoint :",);
+        }
+        Err(DebugProbeError::Timeout) => {
+            print!("Timeout :");
+        }
+        Err(err) => panic!("internal error:{:?}", err),
+    }
 
     let cpu_info = session.target.core.halt(&mut session.probe).unwrap();
-    println!("Run: Core stopped at address 0x{:08x}", cpu_info.pc);
+    println!("Core stopped at address 0x{:08x}", cpu_info.pc);
 }
 // index is the oject number
 fn set_symbolic(session: &mut Session, data: &[u8]) {
@@ -189,8 +200,8 @@ fn set_symbolic(session: &mut Session, data: &[u8]) {
 
     println!("r0 0x{:08x}", r0);
     println!("object {:?}", data);
-    session.target.core.step(&mut session.probe).unwrap();
-    // let r0 = session.probe.write_block8(r0, data).unwrap();
+    // session.target.core.step(&mut session.probe).unwrap();
+    let r0 = session.probe.write_block8(r0, data).unwrap();
 }
 
 fn open_probe() -> MasterProbe {
