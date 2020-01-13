@@ -73,14 +73,29 @@ See section `Cargo.toml` for detaled information on features introduced.
 - llvm target `thumbv7em-none-eabihf` 
   - `> rustup show`, to show current Rust tool-chain and installed targets.
   - `> rustup target add <target>`, to add target, e.g., `thumbv7em-none-eab¡hf`.
+- [cargo bin-utils](https://github.com/rust-embedded/cargo-binutils) (tested with version 0.1.7)
   
 ### Examples
 
 - `f401_minimal.rs`
 
-This example showcase the execution of code on the stm32f401 (and similar targets from the f4).
+This example showcase the execution of a minimal "Hello World!" application on the stm32f401 (and similar targets from the f4).
 
---
+- `f401_minimal2.rs`
+
+This example showcase cycle accurate and non-intrusive execution time measurements. It also covers, debug vs. release mode optimization and the effect of the `inline-asm` feauture.
+
+- `f401_probe.rs`
+
+A continuation of `f401_minimal2.rs`, showcasing the ultimate degree of automation possible, in an all Rust profiling setting. Further information is found in the `runner` crate.
+
+---
+
+### Disclaimer
+
+This project is in early development, thus expect bugs and shortcomings, no API stability offered or guaranteed. It is however well suited for experimentation and all implemented features have been successfully tested.
+
+---
 
 ## Licencse
 

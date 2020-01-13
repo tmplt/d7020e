@@ -33,7 +33,9 @@ version = "0.1.0"
 
 [dependencies.klee-sys]
 git = "https://gitlab.henriktjader.com/pln/klee-sys.git"
+# path = "../klee-sys"
 version = "0.1.0"
+features = ["inline-asm"]
 
 # [dependencies.cortex-m-rtfm]
 # path = "../cortex-m-rtpro"
@@ -48,13 +50,15 @@ vcell = { git = "https://github.com/perlindgren/vcell.git", branch = "trustit" }
 #vcell = { path = "../vcell" }
 
 cortex-m = { git = "https://github.com/perlindgren/cortex-m.git", branch = "trustit" }
-# cortex-m = { path = "../cortex-m" }
+#cortex-m = { path = "../cortex-m" }
 
 cortex-m-rt = { git = "https://github.com/perlindgren/cortex-m-rt.git", branch = "trustit" }
 # cortex-m-rt = { path = "../cortex-m-rt" }
 
 [features] 
+# default = ["f4"] # uncomment to enable as default feature
 klee-analysis = [ 
+     "klee-sys/klee-analysis",
      "vcell/klee-analysis",
      "cortex-m/klee-analysis", 
      "cortex-m-rt/klee-analysis" 
