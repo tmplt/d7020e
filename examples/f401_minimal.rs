@@ -46,8 +46,8 @@ fn main() -> ! {
 // Breakpoint 1, main () at examples/f401_minimal.rs:14
 // 14      #[entry]
 //
-// `main` is our "entry" point for the user applicaiton.
-// It can be named anything by needs to annoted by #[entry].
+// `main` is our "entry" point for the user application.
+// It can be named anything by needs to annotated by #[entry].
 // At this point global variables have been initiated.
 //
 // The `openocd.gdb` script defines the startup procedure, where we have set
@@ -95,19 +95,19 @@ fn main() -> ! {
 //
 // Some basic Rust.
 // Use https://www.rust-lang.org/learn and in particular https://doc.rust-lang.org/book/.
-// There is even a book on embeddded Rust available:
+// There is even a book on embedded Rust available:
 // https://rust-embedded.github.io/book/, it covers much more than we need here.
 //
 // Figure out a way to print the numbers 0..10 using a for loop.
 //
-// Figure out a way to store the numbers in 0..10 in a stacic (global) array using a loop.
+// Figure out a way to store the numbers in 0..10 in a static (global) array using a loop.
 //
 // Print the resulting array (using a single println invocation, not a loop).
 //
 // (You may prototype the code directly on https://play.rust-lang.org/, and when it works
-// backport that into the minimal example, and chack that it works the same)
+// back-port that into the minimal example, and check that it works the same)
 //
-// These two small excersises should get you warmed up.
+// These two small exercises should get you warmed up.
 //
 // Some reflections:
 // Why is does dealing with static variables require `unsafe`?
