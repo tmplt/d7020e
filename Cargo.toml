@@ -35,7 +35,7 @@ version = "0.1.0"
 git = "https://gitlab.henriktjader.com/pln/klee-sys.git"
 # path = "../klee-sys"
 version = "0.1.0"
-features = ["inline-asm"]
+#features = ["inline-asm"]
 
 # [dependencies.cortex-m-rtfm]
 # path = "../cortex-m-rtpro"
@@ -63,8 +63,8 @@ klee-analysis = [
      "cortex-m/klee-analysis", 
      "cortex-m-rt/klee-analysis" 
 ]
-
-inline-asm = ["cortex-m/inline-asm"]
+klee-replay = [ "klee-sys/klee-replay"]
+inline-asm = ["cortex-m/inline-asm", "klee-sys/inline-asm"]
 # rtpro = [ "cortex-m-rtfm/klee-analysis", "cortex-m-rt/rtpro", "lm3s6965" ]
 f4 = ["stm32f4/stm32f401", "stm32f4/rt", "cortex-m-semihosting", "cortex-m-rt", "cortex-m"]
 
