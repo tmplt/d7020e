@@ -19,7 +19,7 @@ use probe_rs::{
 fn main() {
     println!("read ktest file");
 
-    let ktest = read_ktest("test000001.ktest").unwrap();
+    let ktest = read_ktest("resources/test000001.ktest").unwrap();
     println!("ktest {:?}", ktest);
 
     let mut probe = open_probe();
