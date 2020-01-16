@@ -1,5 +1,7 @@
 use ktest::{read_ktest, KTEST};
 
+pub mod common;
+
 use probe_rs::{
     config::registry::{Registry, SelectionStrategy},
     coresight::memory::MI,
