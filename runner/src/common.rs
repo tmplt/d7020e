@@ -70,3 +70,10 @@ fn update_tr(s: String, trace: &Trace, trmap: &mut TaskResources) {
         update_tr(s.clone(), trace, trmap);
     }
 }
+
+fn compute_load_factor(tasks: &Tasks) -> f32 {
+    tasks
+        .iter()
+        .map(|t| (t.trace.end - t.trace.start) as f32 / (t.inter_arrival as f32))
+        .sum()
+}
