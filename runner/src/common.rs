@@ -1,8 +1,9 @@
+use std::cmp;
 use std::collections::{HashMap, HashSet};
 
 // common data structures
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Task {
     pub id: String,
     pub prio: u8,
@@ -12,7 +13,7 @@ pub struct Task {
 }
 
 //#[derive(Debug, Clone)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Trace {
     pub id: String,
     pub start: u32,
@@ -76,4 +77,35 @@ fn compute_load_factor(tasks: &Tasks) -> f32 {
         .iter()
         .map(|t| (t.trace.end - t.trace.start) as f32 / (t.inter_arrival as f32))
         .sum()
+}
+
+// Implement a function that takes a `Task` and returns the corresponding blocking time.
+fn compute_blocking_time(tasks: &Tasks, task: &Task) -> u32 {
+    // Record resource ceilings and critical sections for each all resources used in all other
+    // tasks.
+    fn record_resources(recs: &mut Vec<(u8, u32)>, traces: &Vec<Trace>, prio: u8) {
+        for trace in traces {
+            recs.push((prio, trace.end - trace.start));
+
+            if !trace.inner.is_empty() {
+                record_resources(recs, &trace.inner, prio);
+            }
+        }
+    }
+    let mut recs = Vec::new();
+    for t in tasks.iter().filter(|t| t.prio < task.prio && t != &task) {
+        record_resources(&mut recs, &t.trace.inner, t.prio);
+    }
+
+    // Find the longest critical section of a resource from the other tasks that have sufficiently
+    // large resource ceilings.
+    recs.iter()
+        .filter_map(|(ceil, crit_len)| {
+            if ceil >= &task.prio {
+                Some(crit_len)
+            } else {
+                None
+            }
+        })
+        .fold(0, |prev, crit_len| cmp::max(prev, *crit_len))
 }
