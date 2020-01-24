@@ -109,3 +109,15 @@ fn compute_blocking_time(tasks: &Tasks, task: &Task) -> u32 {
         })
         .fold(0, |prev, crit_len| cmp::max(prev, *crit_len))
 }
+
+fn compute_preemption_time(tasks: &Tasks, task: &Task) -> u32 {
+    tasks
+        .iter()
+        .filter(|t| t != &task && t.prio >= task.prio)
+        .map(|h| {
+            let wcet = h.trace.end - h.trace.start;
+            let preemptions = (task.deadline as f32 / h.inter_arrival as f32).ceil() as u32;
+            wcet * preemptions
+        })
+        .sum()
+}
