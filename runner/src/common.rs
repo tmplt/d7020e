@@ -124,3 +124,7 @@ fn compute_preemption_time(tasks: &Tasks, task: &Task) -> u32 {
         })
         .sum()
 }
+
+fn compute_response_time(tasks: &Tasks, task: &Task) -> u32 {
+    wcet(task) + compute_blocking_time(tasks, task) + compute_preemption_time(tasks, task)
+}
