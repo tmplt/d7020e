@@ -72,10 +72,14 @@ fn update_tr(s: String, trace: &Trace, trmap: &mut TaskResources) {
     }
 }
 
+fn wcet(t: &Task) -> u32 {
+    t.trace.end - t.trace.start
+}
+
 fn compute_load_factor(tasks: &Tasks) -> f32 {
     tasks
         .iter()
-        .map(|t| (t.trace.end - t.trace.start) as f32 / (t.inter_arrival as f32))
+        .map(|t| wcet(t) as f32 / (t.inter_arrival as f32))
         .sum()
 }
 
@@ -115,9 +119,8 @@ fn compute_preemption_time(tasks: &Tasks, task: &Task) -> u32 {
         .iter()
         .filter(|t| t != &task && t.prio >= task.prio)
         .map(|h| {
-            let wcet = h.trace.end - h.trace.start;
             let preemptions = (task.deadline as f32 / h.inter_arrival as f32).ceil() as u32;
-            wcet * preemptions
+            wcet(h) * preemptions
         })
         .sum()
 }
