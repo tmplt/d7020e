@@ -135,6 +135,7 @@ fn compute_preemption_time(tasks: &Tasks, task: &Task) -> u32 {
         .iter()
         .filter(|t| t != &task && t.prio >= task.prio)
         .map(|h| {
+            // We assume worst-case: busy-time = deadline
             let preemptions = (task.deadline as f32 / h.inter_arrival as f32).ceil() as u32;
             wcet(h) * preemptions
         })
