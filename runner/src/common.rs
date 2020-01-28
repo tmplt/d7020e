@@ -84,34 +84,50 @@ fn compute_load_factor(tasks: &Tasks) -> f32 {
 }
 
 // Implement a function that takes a `Task` and returns the corresponding blocking time.
-fn compute_blocking_time(tasks: &Tasks, task: &Task) -> u32 {
-    // Record resource ceilings and critical sections for each all resources used in all other
-    // tasks.
-    fn record_resources(recs: &mut Vec<(u8, u32)>, traces: &Vec<Trace>, prio: u8) {
-        for trace in traces {
-            recs.push((prio, trace.end - trace.start));
-
-            if !trace.inner.is_empty() {
-                record_resources(recs, &trace.inner, prio);
+fn compute_blocking_time(tasks: &Tasks, under_analysis: &Task) -> u32 {
+    // Traverse the full trace of a task, recording data all the while.
+    fn traverse_trace<F: FnMut(&Trace, &Task) -> ()>(task: &Task, f: &mut F) {
+        fn inner<F: FnMut(&Trace, &Task) -> ()>(traces: &Vec<Trace>, task: &Task, f: &mut F) {
+            for trace in traces {
+                f(trace, task);
+                if !trace.inner.is_empty() {
+                    inner(&trace.inner, task, f);
+                }
             }
         }
+        inner(&task.trace.inner, task, f);
     }
-    let mut recs = Vec::new();
-    for t in tasks.iter().filter(|t| t.prio < task.prio && t != &task) {
-        record_resources(&mut recs, &t.trace.inner, t.prio);
+
+    // Record resources used in task under analysis
+    let mut blocking_resources = HashSet::new();
+    traverse_trace(&under_analysis, &mut |trace, _| {
+        blocking_resources.insert(trace.id.clone());
+    });
+
+    // Record resource ceilings and critical sections for each all resources used in all other
+    // tasks.
+    let mut records = Vec::new();
+    for task in tasks
+        .iter()
+        .filter(|t| t.prio < under_analysis.prio && t != &under_analysis)
+    {
+        traverse_trace(&task, &mut |trace, parent| {
+            records.push((trace.id.clone(), parent.prio, trace.end - trace.start));
+        });
     }
 
     // Find the longest critical section of a resource from the other tasks that have sufficiently
     // large resource ceilings.
-    recs.iter()
-        .filter_map(|(ceil, crit_len)| {
-            if ceil >= &task.prio {
-                Some(crit_len)
+    records
+        .iter()
+        .filter_map(|(id, prio, wcet)| {
+            if blocking_resources.contains(id) && prio < &under_analysis.prio {
+                Some(wcet)
             } else {
                 None
             }
         })
-        .fold(0, |prev, crit_len| cmp::max(prev, *crit_len))
+        .fold(0, |prev, wcet| cmp::max(prev, *wcet))
 }
 
 fn compute_preemption_time(tasks: &Tasks, task: &Task) -> u32 {
