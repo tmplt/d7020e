@@ -68,10 +68,20 @@ fn main() {
     let tasks: Tasks = vec![t1, t2, t3];
 
     // println!("tasks {:?}", &tasks);
-    for (t, r, c, b, i) in analyze_tasks(&tasks) {
-        println!(
-            "Task {}:\tR(t) = {}\tC(t) = {},\tB(t) = {},\tI(t) = {}",
-            t.id, r, c, b, i
-        );
+    for (task, result) in analyze_tasks(&tasks) {
+        match result {
+            Ok((r, c, b, i)) => {
+                println!(
+                    "Task {}:\tR(t) = {}\tC(t) = {},\tB(t) = {},\tI(t) = {}",
+                    task.id, r, c, b, i
+                );
+            }
+            Err(r) => {
+                println!(
+                    "Task {}:\tNot schedulable! R(t) = {} >= D(t) = {}",
+                    task.id, r, task.deadline
+                );
+            }
+        }
     }
 }

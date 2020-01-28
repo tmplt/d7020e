@@ -146,16 +146,22 @@ fn compute_response_time(tasks: &Tasks, task: &Task) -> u32 {
     wcet(task) + compute_blocking_time(tasks, task) + compute_preemption_time(tasks, task)
 }
 
-pub fn analyze_tasks(tasks: &Tasks) -> Vec<(&Task, u32, u32, u32, u32)> {
+pub fn analyze_tasks(tasks: &Tasks) -> Vec<(&Task, Result<(u32, u32, u32, u32), u32>)> {
     let mut info = Vec::new();
     for task in tasks {
-        info.push((
-            task,
-            compute_response_time(tasks, task),
-            wcet(task),
-            compute_blocking_time(tasks, task),
-            compute_preemption_time(tasks, task),
-        ));
+        let r = compute_response_time(tasks, task);
+        let result = if r < task.deadline {
+            Ok((
+                r,
+                wcet(task),
+                compute_blocking_time(tasks, task),
+                compute_preemption_time(tasks, task),
+            ))
+        } else {
+            Err(r)
+        };
+
+        info.push((task, result));
     }
 
     info
