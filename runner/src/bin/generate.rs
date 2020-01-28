@@ -67,10 +67,11 @@ fn main() {
     // builds a vector of tasks t1, t2, t3
     let tasks: Tasks = vec![t1, t2, t3];
 
-    println!("tasks {:?}", &tasks);
-    // println!("tot_util {}", tot_util(&tasks));
-
-    let (ip, tr) = pre_analysis(&tasks);
-    println!("ip: {:?}", ip);
-    println!("tr: {:?}", tr);
+    // println!("tasks {:?}", &tasks);
+    for (t, r, c, b, i) in analyze_tasks(&tasks) {
+        println!(
+            "Task {}:\tR(t) = {}\tC(t) = {},\tB(t) = {},\tI(t) = {}",
+            t.id, r, c, b, i
+        );
+    }
 }
