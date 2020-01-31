@@ -130,13 +130,48 @@ fn compute_blocking_time(tasks: &Tasks, under_analysis: &Task) -> u32 {
         .fold(0, |prev, wcet| cmp::max(prev, *wcet))
 }
 
-fn compute_preemption_time(tasks: &Tasks, task: &Task) -> u32 {
+fn compute_exact_response_time(tasks: &Tasks, under_analysis: &Task) -> Option<u32> {
+    fn recurrance(tasks: &Tasks, under_analysis: &Task, s: u32) -> u32 {
+        let base = wcet(under_analysis) + compute_blocking_time(tasks, under_analysis);
+
+        if s == 0 {
+            return base;
+        }
+
+        base + tasks
+            .iter()
+            .filter(|h| h.prio > under_analysis.prio)
+            .map(|h| {
+                let r = (recurrance(tasks, under_analysis, s - 1) as f32 / h.inter_arrival as f32)
+                    .ceil() as u32;
+                r * wcet(h)
+            })
+            .sum::<u32>()
+    }
+
+    for s in 0.. {
+        let r = move |s| recurrance(tasks, under_analysis, s);
+        match (r(s), r(s + 1)) {
+            (p, c) if p == c => return Some(c),
+            (p, _) if p > under_analysis.deadline => return None,
+            _ => continue,
+        }
+    }
+
+    // Convince rustc I know what I'm doing; we will always return Option<u32> in the above
+    // for-loop.
+    panic!("absurd");
+    None
+}
+
+fn compute_preemption_time(tasks: &Tasks, under_analysis: &Task) -> u32 {
     tasks
         .iter()
-        .filter(|t| t != &task && t.prio >= task.prio)
+        .filter(|t| t != &under_analysis && t.prio >= under_analysis.prio)
         .map(|h| {
-            // We assume worst-case: busy-time = deadline
-            let preemptions = (task.deadline as f32 / h.inter_arrival as f32).ceil() as u32;
+            // We assume worst-case: busy-time = deadline (approximation)
+            let preemptions =
+                (under_analysis.deadline as f32 / h.inter_arrival as f32).ceil() as u32;
             wcet(h) * preemptions
         })
         .sum()
@@ -146,10 +181,18 @@ fn compute_response_time(tasks: &Tasks, task: &Task) -> u32 {
     wcet(task) + compute_blocking_time(tasks, task) + compute_preemption_time(tasks, task)
 }
 
-pub fn analyze_tasks(tasks: &Tasks) -> Vec<(&Task, Result<(u32, u32, u32, u32), u32>)> {
+pub fn analyze_tasks(
+    tasks: &Tasks,
+    approx: bool,
+) -> Vec<(&Task, Result<(u32, u32, u32, u32), u32>)> {
     let mut info = Vec::new();
     for task in tasks {
-        let r = compute_response_time(tasks, task);
+        let r = if approx {
+            compute_response_time(tasks, task)
+        } else {
+            compute_exact_response_time(tasks, task).unwrap_or(task.deadline)
+        };
+
         let result = if r < task.deadline {
             Ok((
                 r,

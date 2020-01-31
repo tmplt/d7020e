@@ -67,8 +67,8 @@ fn main() {
     // builds a vector of tasks t1, t2, t3
     let tasks: Tasks = vec![t1, t2, t3];
 
-    // println!("tasks {:?}", &tasks);
-    for (task, result) in analyze_tasks(&tasks) {
+    let approx = false;
+    for (task, result) in analyze_tasks(&tasks, approx) {
         match result {
             Ok((r, c, b, i)) => {
                 println!(
@@ -78,7 +78,7 @@ fn main() {
             }
             Err(r) => {
                 println!(
-                    "Task {}:\tNot schedulable! R(t) = {} >= D(t) = {}",
+                    "Task {}:\tNot schedulable; R(t) = {} >= D(t) = {}.",
                     task.id, r, task.deadline
                 );
             }
