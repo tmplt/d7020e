@@ -83,21 +83,21 @@ fn compute_load_factor(tasks: &Tasks) -> f32 {
         .sum()
 }
 
-// Implement a function that takes a `Task` and returns the corresponding blocking time.
-fn compute_blocking_time(tasks: &Tasks, under_analysis: &Task) -> u32 {
-    // Traverse the full trace of a task, recording data all the while.
-    fn traverse_trace<F: FnMut(&Trace, &Task) -> ()>(task: &Task, f: &mut F) {
-        fn inner<F: FnMut(&Trace, &Task) -> ()>(traces: &Vec<Trace>, task: &Task, f: &mut F) {
-            for trace in traces {
-                f(trace, task);
-                if !trace.inner.is_empty() {
-                    inner(&trace.inner, task, f);
-                }
+// Traverse the full trace of a task, recording data all the while.
+fn traverse_trace<F: FnMut(&Trace, &Task) -> ()>(task: &Task, f: &mut F) {
+    fn inner<F: FnMut(&Trace, &Task) -> ()>(traces: &Vec<Trace>, task: &Task, f: &mut F) {
+        for trace in traces {
+            f(trace, task);
+            if !trace.inner.is_empty() {
+                inner(&trace.inner, task, f);
             }
         }
-        inner(&task.trace.inner, task, f);
     }
+    inner(&task.trace.inner, task, f);
+}
 
+// Implement a function that takes a `Task` and returns the corresponding blocking time.
+fn compute_blocking_time(tasks: &Tasks, under_analysis: &Task) -> u32 {
     // Record resources used in task under analysis
     let mut blocking_resources = HashSet::new();
     traverse_trace(&under_analysis, &mut |trace, _| {
@@ -181,10 +181,9 @@ fn compute_response_time(tasks: &Tasks, task: &Task) -> u32 {
     wcet(task) + compute_blocking_time(tasks, task) + compute_preemption_time(tasks, task)
 }
 
-pub fn analyze_tasks(
-    tasks: &Tasks,
-    approx: bool,
-) -> Vec<(&Task, Result<(u32, u32, u32, u32), u32>)> {
+pub type TaskInfo<'a> = (&'a Task, HashSet<String>, u32, bool, u32, u32, u32);
+
+pub fn analyze_tasks(tasks: &Tasks, approx: bool) -> Vec<TaskInfo> {
     let mut info = Vec::new();
     for task in tasks {
         let r = if approx {
@@ -193,18 +192,21 @@ pub fn analyze_tasks(
             compute_exact_response_time(tasks, task).unwrap_or(task.deadline)
         };
 
-        let result = if r < task.deadline {
-            Ok((
-                r,
-                wcet(task),
-                compute_blocking_time(tasks, task),
-                compute_preemption_time(tasks, task),
-            ))
-        } else {
-            Err(r)
-        };
+        // Record resources used in task
+        let mut resources = HashSet::new();
+        traverse_trace(&task, &mut |trace, _| {
+            resources.insert(trace.id.clone());
+        });
 
-        info.push((task, result));
+        info.push((
+            task, // contains prio, deadline, inter-arrival
+            resources,
+            wcet(task),
+            r < task.deadline,
+            r,
+            compute_blocking_time(tasks, task),
+            compute_preemption_time(tasks, task),
+        ));
     }
 
     info

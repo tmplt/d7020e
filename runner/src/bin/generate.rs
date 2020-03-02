@@ -1,5 +1,7 @@
 // use std::collections::{HashMap, HashSet};
 use runner::common::*;
+use std::error::Error;
+use std::io;
 
 fn main() {
     let t1 = Task {
@@ -66,22 +68,47 @@ fn main() {
 
     // builds a vector of tasks t1, t2, t3
     let tasks: Tasks = vec![t1, t2, t3];
-
     let approx = false;
-    for (task, result) in analyze_tasks(&tasks, approx) {
-        match result {
-            Ok((r, c, b, i)) => {
-                println!(
-                    "Task {}:\tR(t) = {}\tC(t) = {},\tB(t) = {},\tI(t) = {}",
-                    task.id, r, c, b, i
-                );
-            }
-            Err(r) => {
-                println!(
-                    "Task {}:\tNot schedulable; R(t) = {} >= D(t) = {}.",
-                    task.id, r, task.deadline
-                );
-            }
+    let tasks = analyze_tasks(&tasks, approx);
+
+    fn dump_to_csv(tasks: &Vec<TaskInfo>) -> Result<(), Box<dyn Error>> {
+        let mut wtr = csv::Writer::from_writer(io::stdout());
+
+        wtr.write_record(&[
+            "Task",            // T*
+            "Resources",       // R*
+            "Prio",            // P(t)
+            "Deadline",        // D(t)
+            "WCET",            // C(t)
+            "Inter-arrival",   // A(t)
+            "Schedulable",     // true or false
+            "Response time",   // R(t)
+            "Blocking time",   // B(t)
+            "Preemption time", // I(t)
+        ])?;
+
+        for (task, resources, wcet, schedulable, r, b, i) in tasks {
+            wtr.write_record(&[
+                task.id.clone(),
+                resources
+                    .iter()
+                    .fold("".to_string(), |prefix, r| prefix + " " + r)
+                    .trim()
+                    .to_string(),
+                task.prio.to_string(),
+                task.deadline.to_string(),
+                wcet.to_string(),
+                task.inter_arrival.to_string(),
+                schedulable.to_string(),
+                r.to_string(),
+                b.to_string(),
+                i.to_string(),
+            ])?;
         }
+
+        wtr.flush()?;
+        Ok(())
     }
+
+    dump_to_csv(&tasks).unwrap();
 }
